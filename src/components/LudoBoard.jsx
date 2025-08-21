@@ -1,6 +1,6 @@
 "use client";
 import { useGameStore } from "../store/gameStore";
-import { createBoard, coordKey, getColorPath, sameCoord,getHomePositions } from "../lib/board";
+import { createBoard, coordKey, getColorPath, sameCoord, getHomePositions } from "../lib/board";
 import Token from "./Token";
 import Dice from "./Dice";
 import "../styles/ludo.css";
@@ -11,11 +11,12 @@ export default function LudoBoard() {
   const { tokens, players, moveToken, currentPlayer, getLegalMoves } =
     useGameStore();
   const legalMoves = getLegalMoves();
+  const legalMoveIndices = legalMoves.map(m => m.index);
 
   const renderCell = (cell) => {
     const tokenElems = [];
 
-    
+
 
     for (let player of players) {
       tokens[player.color].forEach((t, i) => {
@@ -28,7 +29,7 @@ export default function LudoBoard() {
                 key={`${player.color}-${i}`}
                 color={player.color}
                 index={i}
-                canMove={player.id === currentPlayer && legalMoves.includes(i)}
+                canMove={player.id === currentPlayer && legalMoveIndices.includes(i)}
                 onClick={() => moveToken(player.color, i)}
               >
                 {i + 1}
@@ -58,7 +59,7 @@ export default function LudoBoard() {
               </Token>
             );
           }
-          
+
         }
       });
     }

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { COLORS, getColorPath, sameCoord, getHomePositions } from "../lib/board";
+import { COLORS, getColorPath, sameCoord } from "../lib/board";
 
 const initialPlayers = [
   { id: 0, color: COLORS.RED },
@@ -8,12 +8,18 @@ const initialPlayers = [
   { id: 3, color: COLORS.BLUE },
 ];
 
+// Token factory
+function makeToken() {
+  return { pos: null, inHome: true, finished: false };
+}
+
+// Reset state for all tokens
 function getInitialTokens() {
   return {
-    [COLORS.RED]: Array(4).fill({ pos: null, inHome: true, finished: false }),
-    [COLORS.GREEN]: Array(4).fill({ pos: null, inHome: true, finished: false }),
-    [COLORS.YELLOW]: Array(4).fill({ pos: null, inHome: true, finished: false }),
-    [COLORS.BLUE]: Array(4).fill({ pos: null, inHome: true, finished: false }),
+    [COLORS.RED]: Array(4).fill(0).map(makeToken),
+    [COLORS.GREEN]: Array(4).fill(0).map(makeToken),
+    [COLORS.YELLOW]: Array(4).fill(0).map(makeToken),
+    [COLORS.BLUE]: Array(4).fill(0).map(makeToken),
   };
 }
 
@@ -25,10 +31,13 @@ export const useGameStore = create((set, get) => ({
   rolling: false,
   sixStreak: 0, // counts consecutive 6s for current player
 
+  // 🎲 Roll dice
   rollDice: () => {
-    const { rolling, sixStreak } = get();
+    const { rolling } = get();
     if (rolling) return;
+
     set({ rolling: true });
+
     setTimeout(() => {
       const dice = Math.floor(Math.random() * 6) + 1;
       set({ dice, rolling: false });
@@ -37,7 +46,7 @@ export const useGameStore = create((set, get) => ({
         const { getLegalMoves, dice, sixStreak, currentPlayer, players } = get();
         let nextSixStreak = dice === 6 ? sixStreak + 1 : 0;
 
-        // If three consecutive 6s, turn forfeited
+        // ⚠️ Three 6s in a row → turn skipped
         if (nextSixStreak >= 3) {
           set({
             dice: null,
@@ -49,23 +58,24 @@ export const useGameStore = create((set, get) => ({
 
         const legalMoves = getLegalMoves();
         if (legalMoves.length === 0) {
-          // No moves possible, pass turn to next player, reset six streak
+          // No moves → pass turn
           set({
             currentPlayer: (currentPlayer + 1) % players.length,
             sixStreak: 0,
-            // dice stays visible until next roll
           });
         } else {
-          // If dice is 6, keep sixStreak, else reset
+          // Otherwise continue (reset streak only if not 6)
           set({ sixStreak: nextSixStreak });
         }
       }, 100);
     }, 800);
   },
 
+  // ✅ Check possible moves for current player
   getLegalMoves: () => {
     const { dice, currentPlayer, players, tokens } = get();
     if (!dice) return [];
+
     const player = players[currentPlayer];
     const color = player.color;
     const path = getColorPath(color);
@@ -73,32 +83,25 @@ export const useGameStore = create((set, get) => ({
     return tokens[color]
       .map((t, i) => {
         if (t.finished) return null;
-        // Can enter board from home
-        if (t.inHome && dice === 6 && !isStartBlocked(tokens, color, path[0])) return i;
-        // On board, can move if not blocked in home column and not overshooting finish
-        if (!t.inHome && t.pos !== null) {
-          let newPos = t.pos + dice;
-          if (newPos > path.length - 1) return null; // must roll exact to finish
-          // Home column: can't jump over own tokens
-          if (newPos >= path.length - 6) {
-            for (let step = t.pos + 1; step < newPos; ++step) {
-              if (tokens[color].some((other, j) => j !== i && other.pos === step && !other.inHome && !other.finished)) {
-                return null;
-              }
-            }
-          }
-          // Can't land on own block (two tokens already there)
-          const landingTokens = tokens[color].filter(
-            (other, j) => j !== i && other.pos === newPos && !other.inHome && !other.finished
-          );
-          if (landingTokens.length >= 1) return null;
-          return i;
+
+        // Case 1: Token in home → only move out on 6
+        if (t.inHome && dice === 6 && !isStartBlocked(tokens, color)) {
+          return { index: i, destPos: 0 };
         }
+
+        // Case 2: Token already on board
+        if (!t.inHome && t.pos !== null) {
+          const newPos = t.pos + dice;
+          if (newPos > path.length - 1) return null; // overshoot
+          return { index: i, destPos: newPos };
+        }
+
         return null;
       })
-      .filter((i) => i !== null);
+      .filter(Boolean);
   },
 
+  // 🟢 Move a token
   moveToken: (color, index) => {
     const { dice, tokens, currentPlayer, players, sixStreak } = get();
     if (!dice) return;
@@ -112,46 +115,51 @@ export const useGameStore = create((set, get) => ({
 
     // Move out of home
     if (token.inHome) {
-      if (dice === 6 && !isStartBlocked(tokens, color, path[0])) {
+      if (dice === 6 && !isStartBlocked(tokens, color)) {
         newToken = { pos: 0, inHome: false, finished: false };
       } else {
         return;
       }
     } else {
-      let newPos = token.pos + dice;
+      const newPos = token.pos + dice;
       if (newPos > path.length - 1) return; // must roll exact to finish
 
-      // Home column: can't jump over own tokens
+      // 🏠 Home column blocking rule
       if (newPos >= path.length - 6) {
-        for (let step = token.pos + 1; step < newPos; ++step) {
-          if (tokens[color].some((other, j) => j !== index && other.pos === step && !other.inHome && !other.finished)) {
+        for (let step = token.pos + 1; step < newPos; step++) {
+          if (
+            tokens[color].some(
+              (other, j) =>
+                j !== index && other.pos === step && !other.inHome && !other.finished
+            )
+          ) {
             return;
           }
         }
       }
 
-      // Can't land on own block
+      // 🚫 Can't land on own block
       const landingTokens = tokens[color].filter(
-        (other, j) => j !== index && other.pos === newPos && !other.inHome && !other.finished
+        (other, j) =>
+          j !== index && other.pos === newPos && !other.inHome && !other.finished
       );
       if (landingTokens.length >= 1) return;
 
       // Move token
       newToken = { ...token, pos: newPos };
-      // Finish if at end
-      if (newPos === path.length - 1) {
-        newToken.finished = true;
-      }
+      if (newPos === path.length - 1) newToken.finished = true;
     }
 
     // Update tokens
-    let updatedTokens = { ...tokens };
-    updatedTokens[color] = tokens[color].map((t, i) => (i === index ? newToken : t));
+    const updatedTokens = {
+      ...tokens,
+      [color]: tokens[color].map((t, i) => (i === index ? newToken : t)),
+    };
 
-    // Capture logic (not in home column or safe squares)
+    // 🔴 Capture opponents
     if (!newToken.inHome && !newToken.finished) {
       const landingCoord = path[newToken.pos];
-      for (let other of players) {
+      for (const other of players) {
         if (other.color === color) continue;
         const oppPath = getColorPath(other.color);
         updatedTokens[other.color] = updatedTokens[other.color].map((t) => {
@@ -162,17 +170,18 @@ export const useGameStore = create((set, get) => ({
             !isSafeSquare(landingCoord, color) &&
             !isHomeColumn(landingCoord, other.color)
           ) {
-            return { pos: null, inHome: true, finished: false }; // send back home
+            return makeToken(); // send back home
           }
           return t;
         });
       }
     }
 
-    // If dice was 6 and not third consecutive, player gets another turn
+    // 🎲 Handle turn switching
     let nextPlayer = currentPlayer;
     let nextSixStreak = dice === 6 ? sixStreak + 1 : 0;
     let nextDice = null;
+
     if (dice !== 6 || nextSixStreak >= 3) {
       nextPlayer = (currentPlayer + 1) % players.length;
       nextSixStreak = 0;
@@ -186,6 +195,7 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
+  // 🔄 Reset game
   reset: () => {
     set({
       tokens: getInitialTokens(),
@@ -197,27 +207,25 @@ export const useGameStore = create((set, get) => ({
   },
 }));
 
-// Helpers
+// ------------------ Helpers ------------------
 
-function isStartBlocked(tokens, color, startCoord) {
-  // Block if two own tokens already at start
-  const path = getColorPath(color);
-  const startIndex = 0;
+// Block if two of your own tokens already occupy the start square
+function isStartBlocked(tokens, color) {
   return (
     tokens[color].filter(
-      (t) => !t.inHome && !t.finished && t.pos === startIndex
+      (t) => !t.inHome && !t.finished && t.pos === 0
     ).length >= 2
   );
 }
 
+// Define safe squares
 function isSafeSquare(coord, color) {
-  // You can add your own logic for safe squares (e.g. star squares)
-  // For now, only home columns and center are safe
+  // 🟢 You can extend: star tiles, start tiles, etc.
   return isHomeColumn(coord, color) || (coord.r === 7 && coord.c === 7);
 }
 
+// Last 6 tiles of a path = home column
 function isHomeColumn(coord, color) {
-  // Home column is last 6 squares of path for each color
   const path = getColorPath(color);
   const idx = path.findIndex((p) => sameCoord(p, coord));
   return idx >= path.length - 6;
