@@ -67,38 +67,54 @@ function setLane(board, r, c, color) { setTile(board, r, c, TILE.LANE, color); }
 // Each path is an array of {r,c}. Index 0 is the entry from home when you roll a 6.
 
 export function getColorPath(color) {
-  // Shared constants
-  const center = { r: MID, c: MID }; // use as final goal ref (not a tile index)
+  // The outer path (52 squares, clockwise)
+  // Each entry is {r, c}
+  const path = [];
 
+  // Define the outer path (starting from RED's entry, then clockwise)
+  // RED entry: (0,7)
+  for (let c = 0; c <= 5; c++) path.push({ r: 6, c });         // left to right, top arm
+  for (let r = 6; r >= 0; r--) path.push({ r, c: 6 });         // up, left arm
+  for (let c = 6; c <= 8; c++) path.push({ r: 0, c });         // right, top edge
+  for (let r = 1; r <= 5; r++) path.push({ r, c: 8 });         // down, right arm
+  for (let c = 8; c <= 14; c++) path.push({ r: 6, c });        // right, top arm
+  for (let r = 7; r <= 8; r++) path.push({ r, c: 14 });        // down, right edge
+  for (let c = 13; c >= 9; c--) path.push({ r: 8, c });        // left, bottom arm
+  for (let r = 9; r <= 14; r++) path.push({ r, c: 8 });        // down, right arm
+  for (let c = 8; c >= 6; c--) path.push({ r: 14, c });        // left, bottom edge
+  for (let r = 13; r >= 9; r--) path.push({ r, c: 6 });        // up, left arm
+  for (let c = 5; c >= 0; c--) path.push({ r: 8, c });         // left, bottom arm
+  for (let r = 7; r >= 7; r--) path.push({ r, c: 0 });         // up, left edge
+
+  // Now, for each color, rotate the path so that index 0 is that color's entry square
+  // RED: (6,0), GREEN: (0,8), YELLOW: (8,14), BLUE: (14,6)
+  let entryIndex = 0;
+  if (color === COLORS.RED) entryIndex = path.findIndex(p => p.r === 6 && p.c === 0);
+  if (color === COLORS.GREEN) entryIndex = path.findIndex(p => p.r === 0 && p.c === 8);
+  if (color === COLORS.YELLOW) entryIndex = path.findIndex(p => p.r === 8 && p.c === 14);
+  if (color === COLORS.BLUE) entryIndex = path.findIndex(p => p.r === 14 && p.c === 6);
+
+  // Rotate path for this color
+  const colorPath = [...path.slice(entryIndex), ...path.slice(0, entryIndex)];
+
+  // Add the home column (6 squares) for each color
   if (color === COLORS.RED) {
-    // From top outer arm moving *down* toward center, then lane up into center
-    const entryToArm = coordsRange(0, MID, 1).slice(0, 6).map(r => ({ r, c: MID })); // r=0..5 at c=7
-    const lane = coordsRange(5, 0, -1).map(r => ({ r, c: MID })); // r=5..1 at c=7
-    return [...entryToArm, ...lane, center];
+    for (let r = 5; r >= 0; r--) colorPath.push({ r, c: 7 }); // up to center
   }
-
   if (color === COLORS.GREEN) {
-    // From right outer arm moving *left* toward center, then lane left→center
-    const entryToArm = coordsRange(N - 1, MID, -1).slice(0, 6).map(c => ({ r: MID, c })); // c=14..9 at r=7
-    const lane = coordsRange(N - 2, N - 6, -1).map(c => ({ r: MID, c })); // c=13..9 at r=7
-    return [...entryToArm, ...lane, center];
+    for (let c = 9; c <= 14; c++) colorPath.push({ r: 7, c }); // right to center
   }
-
-  if (color === COLORS.BLUE) {
-    // From bottom outer arm moving *up* toward center, then lane down→center
-    const entryToArm = coordsRange(N - 1, MID, -1).slice(0, 6).map(r => ({ r, c: MID })); // r=14..9
-    const lane = coordsRange(N - 2, N - 6, -1).map(r => ({ r, c: MID })); // r=13..9
-    return [...entryToArm, ...lane, center];
-  }
-
   if (color === COLORS.YELLOW) {
-    // From left outer arm moving *right* toward center, then lane right→center
-    const entryToArm = coordsRange(0, MID, 1).slice(0, 6).map(c => ({ r: MID, c })); // c=0..5 at r=7
-    const lane = coordsRange(1, 5, 1).map(c => ({ r: MID, c })); // c=1..5
-    return [...entryToArm, ...lane, center];
+    for (let r = 9; r <= 14; r++) colorPath.push({ r, c: 7 }); // down to center
+  }
+  if (color === COLORS.BLUE) {
+    for (let c = 5; c >= 0; c--) colorPath.push({ r: 7, c }); // left to center
   }
 
-  return [];
+  // Center
+  colorPath.push({ r: 7, c: 7 });
+
+  return colorPath;
 }
 
 function coordsRange(start, endExclusive, step) {
@@ -106,6 +122,15 @@ function coordsRange(start, endExclusive, step) {
   if (step > 0) for (let v = start; v < endExclusive; v += step) arr.push(v);
   else for (let v = start; v > endExclusive; v += step) arr.push(v);
   return arr;
+}
+
+export function getHomePositions(color) {
+  // Returns array of 4 {r, c} for each color's home
+  if (color === COLORS.RED)    return [ {r:1,c:1}, {r:1,c:4}, {r:4,c:1}, {r:4,c:4} ];
+  if (color === COLORS.GREEN)  return [ {r:1,c:10}, {r:1,c:13}, {r:4,c:10}, {r:4,c:13} ];
+  if (color === COLORS.YELLOW) return [ {r:10,c:1}, {r:10,c:4}, {r:13,c:1}, {r:13,c:4} ];
+  if (color === COLORS.BLUE)   return [ {r:10,c:10}, {r:10,c:13}, {r:13,c:10}, {r:13,c:13} ];
+  return [];
 }
 
 export function coordKey({ r, c }) { return `${r},${c}`; }

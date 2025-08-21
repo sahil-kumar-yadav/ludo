@@ -1,6 +1,6 @@
 "use client";
 import { useGameStore } from "../store/gameStore";
-import { createBoard, coordKey, getColorPath, sameCoord } from "../lib/board";
+import { createBoard, coordKey, getColorPath, sameCoord,getHomePositions } from "../lib/board";
 import Token from "./Token";
 import Dice from "./Dice";
 import "../styles/ludo.css";
@@ -15,6 +15,8 @@ export default function LudoBoard() {
   const renderCell = (cell) => {
     const tokenElems = [];
 
+    
+
     for (let player of players) {
       tokens[player.color].forEach((t, i) => {
         if (!t.inHome && t.pos !== null) {
@@ -26,9 +28,7 @@ export default function LudoBoard() {
                 key={`${player.color}-${i}`}
                 color={player.color}
                 index={i}
-                canMove={
-                  player.id === currentPlayer && legalMoves.includes(i)
-                }
+                canMove={player.id === currentPlayer && legalMoves.includes(i)}
                 onClick={() => moveToken(player.color, i)}
               >
                 {i + 1}
@@ -39,12 +39,54 @@ export default function LudoBoard() {
       });
     }
 
+    // Home tokens
+    for (let player of players) {
+      const homePositions = getHomePositions(player.color);
+      homePositions.forEach((homeCoord, i) => {
+        if (sameCoord(homeCoord, cell)) {
+          const t = tokens[player.color][i];
+          if (t.inHome) {
+            tokenElems.push(
+              <Token
+                key={`${player.color}-home-${i}`}
+                color={player.color}
+                index={i}
+                canMove={player.id === currentPlayer && legalMoves.includes(i)}
+                onClick={() => moveToken(player.color, i)}
+              >
+                {i + 1}
+              </Token>
+            );
+          }
+          
+        }
+      });
+    }
+
+    // Center: show finished tokens
+    if (cell.type === "center") {
+      for (let player of players) {
+        tokens[player.color].forEach((t, i) => {
+          if (t.finished) {
+            tokenElems.push(
+              <Token
+                key={`${player.color}-finished-${i}`}
+                color={player.color}
+                index={i}
+                canMove={false}
+              >
+                {i + 1}
+              </Token>
+            );
+          }
+        });
+      }
+    }
+
     return (
       <div
         key={coordKey(cell)}
-        className={`cell type-${cell.type} ${
-          cell.color ? `color-${cell.color}` : ""
-        } ${cell.isSafe ? "safe" : ""}`}
+        className={`cell type-${cell.type} ${cell.color ? `color-${cell.color}` : ""} ${cell.isSafe ? "safe" : ""}`}
       >
         {tokenElems}
       </div>

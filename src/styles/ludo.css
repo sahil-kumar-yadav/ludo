@@ -7,9 +7,13 @@
 
 .board {
   display: grid;
-  grid-template-rows: repeat(15, 30px);
-  grid-template-columns: repeat(15, 30px);
+  grid-template-rows: repeat(15, minmax(0, 1fr));
+  grid-template-columns: repeat(15, minmax(0, 1fr));
   border: 3px solid #333;
+  width: 90vw;
+  max-width: 700px;
+  aspect-ratio: 1 / 1;
+  background: white;
 }
 
 .row {
