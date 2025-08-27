@@ -106,16 +106,20 @@ export function getColorPath(color) {
 
   // Add the home column (6 squares) for each color
   if (color === COLORS.RED) {
-    for (let r = 5; r >= 0; r--) colorPath.push({ r, c: 7 }); // up to center
+    // RED: From (6,7) → (1,7) — Up to center
+    for (let r = 6; r >= 1; r--) colorPath.push({ r, c: 7 });
   }
   if (color === COLORS.GREEN) {
-    for (let c = 9; c <= 14; c++) colorPath.push({ r: 7, c }); // right to center
+    // GREEN: From (7,8) → (7,13) — Right to center
+    for (let c = 8; c <= 13; c++) colorPath.push({ r: 7, c });
   }
   if (color === COLORS.YELLOW) {
-    for (let r = 9; r <= 14; r++) colorPath.push({ r, c: 7 }); // down to center
+    // YELLOW: From (8,7) → (13,7) — Down to center
+    for (let r = 8; r <= 13; r++) colorPath.push({ r, c: 7 });
   }
   if (color === COLORS.BLUE) {
-    for (let c = 5; c >= 0; c--) colorPath.push({ r: 7, c }); // left to center
+    // BLUE: From (7,6) → (7,1) — Left to center
+    for (let c = 6; c >= 1; c--) colorPath.push({ r: 7, c });
   }
 
   // Center
