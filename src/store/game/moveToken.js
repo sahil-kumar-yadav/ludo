@@ -1,6 +1,8 @@
-import { getColorPath, sameCoord } from "../../lib/board";
+// import { getColorPath, sameCoord } from "../../lib/board";
 import { makeToken } from "../tokens";
 import { isStartBlocked, isSafeSquare, isHomeColumn } from "../gameHelpers";
+import { getColorPath } from "@/lib/board";
+import { sameCoord } from "@/lib/board-constants";
 
 export function moveToken(set, get) {
   return (color, index) => {

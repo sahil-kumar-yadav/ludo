@@ -1,4 +1,4 @@
-import { COLORS } from "../lib/board";
+import { COLORS } from "@/lib/board-constants";
 
 export function makeToken() {
   return { pos: null, inHome: true, finished: false };

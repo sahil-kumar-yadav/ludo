@@ -1,19 +1,8 @@
 // src/lib/board.js
-export const COLORS = {
-  RED: "red",
-  GREEN: "green",
-  YELLOW: "yellow",
-  BLUE: "blue",
-  NEUTRAL: "neutral",
-};
 
-export const TILE = {
-  EMPTY: "empty",
-  HOME: "home",
-  PATH: "path",
-  LANE: "lane",
-  CENTER: "center",
-};
+import { COLORS, TILE, HOME_PATHS, CENTER, SAFE_SQUARES, coordKey, sameCoord } from "./board-constants";
+
+
 
 const N = 15;
 const MID = Math.floor(N / 2); // 7
@@ -63,12 +52,8 @@ function setPathIfEmpty(board, r, c) { if (board[r][c].type === TILE.EMPTY) setT
 function setLane(board, r, c, color) { setTile(board, r, c, TILE.LANE, color); }
 
 // ---------- Paths (ordered coordinates) ----------
-// We model a *straight-arm* path for each color, then into its lane and the center.
-// Each path is an array of {r,c}. Index 0 is the entry from home when you roll a 6.
-
 export function getColorPath(color) {
   // The outer path (52 squares, clockwise)
-  // Each entry is {r, c}
   const path = [];
 
   // Define the outer path (starting from RED's entry, then clockwise)
@@ -117,13 +102,6 @@ export function getColorPath(color) {
   return colorPath;
 }
 
-function coordsRange(start, endExclusive, step) {
-  const arr = [];
-  if (step > 0) for (let v = start; v < endExclusive; v += step) arr.push(v);
-  else for (let v = start; v > endExclusive; v += step) arr.push(v);
-  return arr;
-}
-
 export function getHomePositions(color) {
   // Returns array of 4 {r, c} for each color's home
   if (color === COLORS.RED)    return [ {r:1,c:1}, {r:1,c:4}, {r:4,c:1}, {r:4,c:4} ];
@@ -132,22 +110,3 @@ export function getHomePositions(color) {
   if (color === COLORS.BLUE)   return [ {r:10,c:10}, {r:10,c:13}, {r:13,c:10}, {r:13,c:13} ];
   return [];
 }
-
-
-// assuming your path length = 52 tiles
-export const HOME_PATHS = {
-  RED:    [52, 53, 54, 55, 56, 57], 
-  GREEN:  [58, 59, 60, 61, 62, 63], 
-  YELLOW: [64, 65, 66, 67, 68, 69], 
-  BLUE:   [70, 71, 72, 73, 74, 75], 
-};
-
-// final center position
-export const CENTER = 100;
-
-
-export const SAFE_SQUARES = [0, 8, 13, 21, 26, 34, 39, 47]; 
-
-
-export function coordKey({ r, c }) { return `${r},${c}`; }
-export function sameCoord(a, b) { return a && b && a.r === b.r && a.c === b.c; }

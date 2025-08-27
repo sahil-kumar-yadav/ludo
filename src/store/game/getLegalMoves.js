@@ -1,4 +1,5 @@
-import { getColorPath, sameCoord } from "../../lib/board";
+import { getColorPath } from "@/lib/board";
+import { sameCoord } from "@/lib/board-constants";
 
 export function getLegalMoves(get) {
   return () => {

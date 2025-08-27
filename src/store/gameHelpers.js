@@ -1,4 +1,5 @@
-import { getColorPath, sameCoord } from "../lib/board";
+import { getColorPath } from "@/lib/board";
+import { sameCoord } from "@/lib/board-constants";
 
 // Block if two of your own tokens already occupy the start square
 export function isStartBlocked(tokens, color) {

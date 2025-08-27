@@ -1,4 +1,4 @@
-import { COLORS } from "../../lib/board";
+import { COLORS } from "@/lib/board-constants";
 
 export const initialPlayers = [
   { id: 0, color: COLORS.RED },

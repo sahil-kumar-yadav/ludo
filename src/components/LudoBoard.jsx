@@ -1,15 +1,14 @@
 "use client";
 import { useGameStore } from "../store/gameStore";
-import {
-  createBoard,
-  coordKey,
-  getColorPath,
-  sameCoord,
-  getHomePositions,
-} from "../lib/board";
 import Token from "./Token";
 import Dice from "./Dice";
 import clsx from "classnames";
+import {
+  createBoard,
+  getColorPath,
+  getHomePositions,
+} from "@/lib/board";
+import { coordKey, sameCoord } from "@/lib/board-constants";
 
 const board = createBoard();
 
@@ -114,7 +113,7 @@ export default function LudoBoard() {
           }[cell.color],
           cell.type === "center" && "bg-gray-200",
           cell.isSafe &&
-            "bg-yellow-100 after:content-['★'] after:text-yellow-500 after:text-xs after:absolute"
+          "bg-yellow-100 after:content-['★'] after:text-yellow-500 after:text-xs after:absolute"
         )}
       >
         {tokenElems}
