@@ -1,5 +1,4 @@
-# Task: make modular gameStore.js
-
+# Task: make movement of all tokens proper and change position of initial blue and yellow token proper
 # 🎲 Ludo Game  
 **Next.js + Zustand + TailwindCSS**
 
