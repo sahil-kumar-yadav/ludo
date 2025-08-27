@@ -3,11 +3,11 @@ import { COLORS, TILE } from "@/lib/board";
 import clsx from "classnames";
 
 const COLOR_BG = {
-  [COLORS.RED]: "bg-gradient-to-br from-red-400 to-red-600",
-  [COLORS.GREEN]: "bg-gradient-to-br from-green-400 to-green-600",
-  [COLORS.YELLOW]: "bg-gradient-to-br from-yellow-300 to-yellow-500",
-  [COLORS.BLUE]: "bg-gradient-to-br from-blue-400 to-blue-600",
-  [COLORS.NEUTRAL]: "bg-gray-100",
+  [COLORS.RED]: "bg-gradient-to-br from-red-500 via-red-600 to-red-700",
+  [COLORS.GREEN]: "bg-gradient-to-br from-green-500 via-green-600 to-green-700",
+  [COLORS.YELLOW]: "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600",
+  [COLORS.BLUE]: "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
+  [COLORS.NEUTRAL]: "bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400",
 };
 
 export default function Tile({ cell }) {
