@@ -123,14 +123,14 @@ export default function LudoBoard() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col lg:flex-row items-center justify-center gap-8 p-4">
       {/* Board */}
       <div className="grid grid-cols-15 bg-white shadow-2xl border-4 border-gray-400 rounded-xl overflow-hidden">
         {board.map((row) => row.map((cell) => renderCell(cell)))}
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col items-center gap-3">
+      {/* Controls (side on desktop, bottom on mobile) */}
+      <div className="flex flex-col items-center gap-4">
         <Dice />
         <div className="text-lg font-semibold">
           Turn:{" "}
