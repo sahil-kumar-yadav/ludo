@@ -1,4 +1,3 @@
-// import { getColorPath, sameCoord } from "../../lib/board";
 import { makeToken } from "../tokens";
 import { isStartBlocked, isSafeSquare, isHomeColumn } from "../gameHelpers";
 import { getColorPath } from "@/lib/board";

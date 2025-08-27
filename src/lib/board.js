@@ -41,7 +41,7 @@ export function createBoard() {
   for (let c = 1; c <= 5; c++) setLane(board, MID, c, COLORS.YELLOW);        // left → center
 
   // Safe dots (visual)
-  const safeCoords = [ [MID, 2], [MID, 5], [MID, 9], [MID, 12], [2, MID], [5, MID], [9, MID], [12, MID] ];
+  const safeCoords = [[MID, 2], [MID, 5], [MID, 9], [MID, 12], [2, MID], [5, MID], [9, MID], [12, MID]];
   for (const [r, c] of safeCoords) if (board[r][c].type === TILE.PATH) board[r][c].isSafe = true;
 
   return board;
@@ -56,28 +56,50 @@ export function getColorPath(color) {
   // The outer path (52 squares, clockwise)
   const path = [];
 
-  // Define the outer path (starting from RED's entry, then clockwise)
-  // RED entry: (0,7)
-  for (let c = 0; c <= 5; c++) path.push({ r: 6, c });         // left to right, top arm
-  for (let r = 6; r >= 0; r--) path.push({ r, c: 6 });         // up, left arm
-  for (let c = 6; c <= 8; c++) path.push({ r: 0, c });         // right, top edge
-  for (let r = 1; r <= 5; r++) path.push({ r, c: 8 });         // down, right arm
-  for (let c = 8; c <= 14; c++) path.push({ r: 6, c });        // right, top arm
-  for (let r = 7; r <= 8; r++) path.push({ r, c: 14 });        // down, right edge
-  for (let c = 13; c >= 9; c--) path.push({ r: 8, c });        // left, bottom arm
-  for (let r = 9; r <= 14; r++) path.push({ r, c: 8 });        // down, right arm
-  for (let c = 8; c >= 6; c--) path.push({ r: 14, c });        // left, bottom edge
-  for (let r = 13; r >= 9; r--) path.push({ r, c: 6 });        // up, left arm
-  for (let c = 5; c >= 0; c--) path.push({ r: 8, c });         // left, bottom arm
-  for (let r = 7; r >= 7; r--) path.push({ r, c: 0 });         // up, left edge
+  // Start from RED's entry: (6, 0)
+  // 1. RED's row: Move right from (6,0) to (6,5)
+  for (let c = 0; c <= 5; c++) path.push({ r: 6, c });
+
+  // 2. Move up to GREEN's column: from (5,5) to (0,6)
+  for (let r = 5; r >= 0; r--) path.push({ r, c: 6 });
+
+  // 3. Move right across GREEN's row: from (0,6) to (0,8)
+  for (let c = 7; c <= 7; c++) path.push({ r: 0, c });
+
+  // 4. Move down GREEN's column: from (0,8) to (5,8)
+  for (let r = 0; r <= 5; r++) path.push({ r, c: 8 });
+
+  // 5. Move right to YELLOW's row: from (5,8) to (6,14)
+  for (let c = 9; c <= 14; c++) path.push({ r: 6, c });
+
+  // 6. Move down to YELLOW's column: from (6,14) to (8,14)
+  for (let r = 7; r <= 7; r++) path.push({ r, c: 14 });
+
+  // 7. Move left across YELLOW's row: from (8,14) to (8,9)
+  for (let c = 14; c >= 9; c--) path.push({ r: 8, c });
+
+  // 8. Move down to BLUE's column: from (8,9) to (14,8)
+  for (let r = 9; r <= 14; r++) path.push({ r, c: 8 });
+
+  // 9. Move left across BLUE's row: from (14,8) to (14,6)
+  for (let c = 7; c >= 7; c--) path.push({ r: 14, c });
+
+  // 10. Move up BLUE's column: from (14,6) to (9,6)
+  for (let r = 14; r >= 9; r--) path.push({ r, c: 6 });
+
+  // 11. Move left to RED's row: from (9,6) to (8,0)
+  for (let c = 5; c >= 0; c--) path.push({ r: 8, c });
+
+  // 12. Move up to complete loop: from (8,0) to (7,0)
+  for (let r = 8; r >= 8; r--) path.push({ r, c: 0 });
 
   // Now, for each color, rotate the path so that index 0 is that color's entry square
-  // RED: (6,0), GREEN: (0,8), YELLOW: (8,14), BLUE: (14,6)
+  // RED: (6,0), GREEN: (0,8), YELLOW: (14,6), BLUE: (8,14)
   let entryIndex = 0;
   if (color === COLORS.RED) entryIndex = path.findIndex(p => p.r === 6 && p.c === 0);
   if (color === COLORS.GREEN) entryIndex = path.findIndex(p => p.r === 0 && p.c === 8);
-  if (color === COLORS.YELLOW) entryIndex = path.findIndex(p => p.r === 8 && p.c === 14);
-  if (color === COLORS.BLUE) entryIndex = path.findIndex(p => p.r === 14 && p.c === 6);
+  if (color === COLORS.YELLOW) entryIndex = path.findIndex(p => p.r === 14 && p.c === 6);
+  if (color === COLORS.BLUE) entryIndex = path.findIndex(p => p.r === 8 && p.c === 14);
 
   // Rotate path for this color
   const colorPath = [...path.slice(entryIndex), ...path.slice(0, entryIndex)];
@@ -104,9 +126,9 @@ export function getColorPath(color) {
 
 export function getHomePositions(color) {
   // Returns array of 4 {r, c} for each color's home
-  if (color === COLORS.RED)    return [ {r:1,c:1}, {r:1,c:4}, {r:4,c:1}, {r:4,c:4} ];
-  if (color === COLORS.GREEN)  return [ {r:1,c:10}, {r:1,c:13}, {r:4,c:10}, {r:4,c:13} ];
-  if (color === COLORS.YELLOW) return [ {r:10,c:1}, {r:10,c:4}, {r:13,c:1}, {r:13,c:4} ];
-  if (color === COLORS.BLUE)   return [ {r:10,c:10}, {r:10,c:13}, {r:13,c:10}, {r:13,c:13} ];
+  if (color === COLORS.RED) return [{ r: 1, c: 1 }, { r: 1, c: 4 }, { r: 4, c: 1 }, { r: 4, c: 4 }];
+  if (color === COLORS.GREEN) return [{ r: 1, c: 10 }, { r: 1, c: 13 }, { r: 4, c: 10 }, { r: 4, c: 13 }];
+  if (color === COLORS.YELLOW) return [{ r: 10, c: 1 }, { r: 10, c: 4 }, { r: 13, c: 1 }, { r: 13, c: 4 }];
+  if (color === COLORS.BLUE) return [{ r: 10, c: 10 }, { r: 10, c: 13 }, { r: 13, c: 10 }, { r: 13, c: 13 }];
   return [];
 }

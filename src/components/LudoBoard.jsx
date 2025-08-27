@@ -1,5 +1,5 @@
 "use client";
-import { useGameStore } from "../store/gameStore";
+import { useGameStore } from "@/store/gameStore";
 import Token from "./Token";
 import Dice from "./Dice";
 import clsx from "classnames";
